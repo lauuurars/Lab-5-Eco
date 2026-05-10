@@ -12,8 +12,14 @@ export default function Rooms() {
     const navigate = useNavigate()
 
     useEffect(() => {
+        socket.emit("leave-room")
+
         socket.on("rooms-updated", (updatedRooms) => {
-            setRooms(updatedRooms)
+            setRooms(
+                updatedRooms.filter(
+                    (room: Room) => room.players.length > 0
+                )
+            )
         })
 
         socket.on("room-full", () => {
@@ -29,9 +35,12 @@ export default function Rooms() {
     function handleCreateRoom() {
         if (!roomId || !alias) return
 
-        socket.emit("create-room", roomId)
+        socket.emit("create-room", {
+            roomId,
+            alias
+        })
 
-        handleJoinRoom(roomId)
+        navigate(`/game/${roomId}`)
     }
 
     function handleJoinRoom(id: string) {
@@ -77,7 +86,7 @@ export default function Rooms() {
                         onClick={() => handleJoinRoom(room.id)}
                         className="border p-3 rounded"
                     >
-                        {room.id} - {room.status}
+                        {room.id} - {room.players.length >= 2 ? "full" : "waiting"}
                     </button>
                 ))}
             </div>

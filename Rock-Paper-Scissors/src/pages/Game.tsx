@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { useNavigate, useParams, useLocation } from "react-router-dom"
 
 import { socket } from "../socket/socket"
 import ChoiceButton from "../components/ChoiceButton"
@@ -8,13 +8,10 @@ import type { Choice, Room } from "../types/game.types"
 
 export default function Game() {
     const { roomId } = useParams()
-
     const navigate = useNavigate()
-
-    const [room, setRoom] = useState<Room | null>(null)
-
-    const [selectedChoice, setSelectedChoice] =
-        useState<Choice | null>(null)
+    const { state } = useLocation()
+    const [room, setRoom] = useState<Room | null>(state?.room || null)
+    const [selectedChoice, setSelectedChoice] = useState<Choice | null>(null)
 
     useEffect(() => {
         socket.on("room-updated", (updatedRoom) => {
@@ -34,12 +31,24 @@ export default function Game() {
             })
         })
 
+
         return () => {
             socket.off("room-updated")
             socket.off("player-joined")
             socket.off("game-finished")
         }
     }, [navigate])
+
+    useEffect(() => {
+        socket.on("game-restarted", (updatedRoom) => {
+            setRoom(updatedRoom)
+            setSelectedChoice(null)
+        })
+
+        return () => {
+            socket.off("game-restarted")
+        }
+    }, [])
 
     function handleChoice(choice: Choice) {
         if (selectedChoice) return

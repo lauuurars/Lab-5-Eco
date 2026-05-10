@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import type { Player } from "../types/game.types"
+import { socket } from "../socket/socket"
 
 export default function Results() {
     const navigate = useNavigate()
@@ -21,8 +22,22 @@ export default function Results() {
         return () => clearInterval(interval)
     }, [countdown])
 
+    useEffect(() => {
+        socket.on("game-restarted", (updatedRoom) => {
+            navigate(`/game/${updatedRoom.id}`, {
+                state: {
+                    room: updatedRoom
+                }
+            })
+        })
+
+        return () => {
+            socket.off("game-restarted")
+        }
+    }, [navigate])
+
     function restartGame() {
-        navigate(`/game/${room.id}`)
+        socket.emit("restart-game", room.id)
     }
 
     return (
