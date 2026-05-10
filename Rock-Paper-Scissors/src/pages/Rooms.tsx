@@ -1,7 +1,7 @@
 export default function Rooms() {
-    return(
-        <div>
-            <h1>Holi, esta es una sala :p</h1>
-        </div>
+    return (
+        <>
+            <h1>Holi, esto es una sala :p</h1>
+        </>
     )
 }
