@@ -28,8 +28,43 @@ rawServer.listen(PORT, () => {
 io.on("connection", (socket) => {
     console.log(socket.id)
 
-    // crear una sala
-    socket.on("create-room", (roomId) => {
+    // eliminar a todos los jugadores de una sala vacía
+
+    function removePlayerFromAllRooms(playerId: string) {
+        const ghostRoomIds: string[] = []
+
+        for (let i = rooms.length - 1; i >= 0; i--) {
+            const room = rooms[i]
+            if (!room) continue
+
+            const wasInRoom = room.players.some(player => player.id === playerId)
+            if (!wasInRoom) continue
+
+            room.players = room.players.filter(player => player.id !== playerId)
+            ghostRoomIds.push(room.id)
+
+            if (room.players.length === 0) {
+                rooms.splice(i, 1)
+            } else {
+                io.to(room.id).emit("room-updated", room)
+            }
+        }
+
+        if (ghostRoomIds.length > 0) {
+            io.emit("rooms-updated", rooms)
+        }
+
+        return ghostRoomIds
+    }
+
+    // crear una sala :p
+
+    socket.on("create-room", ({ roomId, alias }) => {
+        const previousRooms = removePlayerFromAllRooms(socket.id)
+        for (const previousRoomId of previousRooms) {
+            socket.leave(previousRoomId)
+        }
+
         const existingRoom = rooms.find(
             room => room.id === roomId
         )
@@ -39,18 +74,34 @@ io.on("connection", (socket) => {
             return
         }
 
-        rooms.push({
+        const newRoom = {
             id: roomId,
-            players: [],
-            status: "waiting"
-        })
+            players: [
+                {
+                    id: socket.id,
+                    alias,
+                    choice: undefined
+                }
+            ]
+        }
+
+        rooms.push(newRoom)
+
+        socket.join(roomId)
 
         io.emit("rooms-updated", rooms)
+
+        io.to(roomId).emit("player-joined", newRoom)
     })
 
     // entrar a una sala
 
     socket.on("join-room", ({ roomId, alias }) => {
+        const previousRooms = removePlayerFromAllRooms(socket.id)
+        for (const previousRoomId of previousRooms) {
+            socket.leave(previousRoomId)
+        }
+
         const room = rooms.find(roomGame => roomGame.id === roomId)
 
         if (!room) return
@@ -67,10 +118,6 @@ io.on("connection", (socket) => {
         }
 
         room.players.push(player)
-
-        if (room.players.length === 2) {
-            room.status = "full"
-        }
 
         socket.join(roomId)
 
@@ -127,26 +174,15 @@ io.on("connection", (socket) => {
     })
 
 
+    socket.on("leave-room", () => {
+        const previousRooms = removePlayerFromAllRooms(socket.id)
+        for (const previousRoomId of previousRooms) {
+            socket.leave(previousRoomId)
+        }
+    })
+
     // desconexión :p
-
     socket.on("disconnect", () => {
-        rooms.forEach(room => {
-            room.players = room.players.filter(
-                player => player.id !== socket.id
-            )
-
-            if (room.players.length < 2) {
-                room.status = "waiting"
-            }
-        })
-
-        const activeRooms = rooms.filter(
-            room => room.players.length > 0
-        )
-
-        rooms.length = 0
-        rooms.push(...activeRooms)
-
-        io.emit("rooms-updated", rooms)
+        removePlayerFromAllRooms(socket.id)
     })
 })

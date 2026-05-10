@@ -9,5 +9,4 @@ export interface Player {
 export interface Room {
     id: string
     players: Player[]
-    status: "waiting" | "full"
 }
