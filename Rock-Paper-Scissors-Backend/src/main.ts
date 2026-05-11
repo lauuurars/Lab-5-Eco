@@ -60,13 +60,21 @@ io.on("connection", (socket) => {
     // crear una sala :p
 
     socket.on("create-room", ({ roomId, alias }) => {
+        const safeAlias = typeof alias === "string" ? alias.trim() : ""
+        const safeRoomId = typeof roomId === "string" ? roomId.trim() : ""
+        if (!safeAlias) {
+            socket.emit("alias-required")
+            return
+        }
+        if (!safeRoomId) return
+
         const previousRooms = removePlayerFromAllRooms(socket.id)
         for (const previousRoomId of previousRooms) {
             socket.leave(previousRoomId)
         }
 
         const existingRoom = rooms.find(
-            room => room.id === roomId
+            room => room.id === safeRoomId
         )
 
         if (existingRoom) {
@@ -75,11 +83,11 @@ io.on("connection", (socket) => {
         }
 
         const newRoom = {
-            id: roomId,
+            id: safeRoomId,
             players: [
                 {
                     id: socket.id,
-                    alias,
+                    alias: safeAlias,
                     choice: undefined
                 }
             ]
@@ -87,22 +95,30 @@ io.on("connection", (socket) => {
 
         rooms.push(newRoom)
 
-        socket.join(roomId)
+        socket.join(safeRoomId)
 
         io.emit("rooms-updated", rooms)
 
-        io.to(roomId).emit("player-joined", newRoom)
+        io.to(safeRoomId).emit("player-joined", newRoom)
     })
 
     // entrar a una sala
 
     socket.on("join-room", ({ roomId, alias }) => {
+        const safeAlias = typeof alias === "string" ? alias.trim() : ""
+        const safeRoomId = typeof roomId === "string" ? roomId.trim() : ""
+        if (!safeAlias) {
+            socket.emit("alias-required")
+            return
+        }
+        if (!safeRoomId) return
+
         const previousRooms = removePlayerFromAllRooms(socket.id)
         for (const previousRoomId of previousRooms) {
             socket.leave(previousRoomId)
         }
 
-        const room = rooms.find(roomGame => roomGame.id === roomId)
+        const room = rooms.find(roomGame => roomGame.id === safeRoomId)
 
         if (!room) return
 
@@ -113,17 +129,17 @@ io.on("connection", (socket) => {
 
         const player = {
             id: socket.id,
-            alias,
+            alias: safeAlias,
             choice: undefined
         }
 
         room.players.push(player)
 
-        socket.join(roomId)
+        socket.join(safeRoomId)
 
         io.emit("rooms-updated", rooms)
 
-        io.to(roomId).emit("player-joined", room)
+        io.to(safeRoomId).emit("player-joined", room)
     })
 
     // elección del jugador :p
