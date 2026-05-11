@@ -27,6 +27,7 @@ rawServer.listen(PORT, () => {
 
 io.on("connection", (socket) => {
     console.log(socket.id)
+    socket.emit("rooms-updated", rooms)
 
     // eliminar a todos los jugadores de una sala vacía
 
