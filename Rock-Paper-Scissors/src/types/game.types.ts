@@ -1,4 +1,4 @@
-export type Choice = "rock" | "paper" | "scissors"
+export type Choice = "Piedra" | "Papel" | "Tijeras"
 
 export interface Player {
     id: string

@@ -63,11 +63,11 @@ export default function Game() {
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center gap-6">
-            <h1 className="text-3xl font-bold">
-                Sala {roomId}
+            <h1 className="text-4xl font-bold text-violet-600">
+                Sala {roomId} 
             </h1>
 
-            <p>
+            <p className="text-violet-700 font-medium">
                 Estado:
                 {" "}
                 {room?.players.length === 2
@@ -77,26 +77,26 @@ export default function Game() {
 
             <div className="flex gap-4">
                 <ChoiceButton
-                    choice="rock"
-                    onClick={() => handleChoice("rock")}
+                    choice="Piedra"
+                    onClick={() => handleChoice("Piedra")}
                     disabled={!!selectedChoice}
                 />
 
                 <ChoiceButton
-                    choice="paper"
-                    onClick={() => handleChoice("paper")}
+                    choice="Papel"
+                    onClick={() => handleChoice("Papel")}
                     disabled={!!selectedChoice}
                 />
 
                 <ChoiceButton
-                    choice="scissors"
-                    onClick={() => handleChoice("scissors")}
+                    choice="Tijeras"
+                    onClick={() => handleChoice("Tijeras")}
                     disabled={!!selectedChoice}
                 />
             </div>
 
             {selectedChoice && (
-                <p>Elegiste: {selectedChoice}</p>
+                <p className="font-medium text-violet-800">Elegiste: {selectedChoice}</p>
             )}
         </div>
     )
