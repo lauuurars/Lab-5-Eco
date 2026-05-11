@@ -16,9 +16,9 @@ export function getWinner(room: Room) {
     }
 
     if (
-        (p1.choice === "rock" && p2.choice === "scissors") ||
-        (p1.choice === "paper" && p2.choice === "rock") ||
-        (p1.choice === "scissors" && p2.choice === "paper")
+        (p1.choice === "Piedra" && p2.choice === "Tijeras") ||
+        (p1.choice === "Papel" && p2.choice === "Piedra") ||
+        (p1.choice === "Tijeras" && p2.choice === "Papel")
     ) {
         return p1.id
     }
