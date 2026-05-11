@@ -10,6 +10,7 @@ export default function Rooms() {
     const [alias, setAlias] = useState("")
 
     const navigate = useNavigate()
+    const trimmedAlias = alias.trim()
 
     useEffect(() => {
         socket.emit("leave-room")
@@ -26,27 +27,37 @@ export default function Rooms() {
             alert("Sala llena")
         })
 
+        socket.on("alias-required", () => {
+            alert("Escribe tu alias antes de crear o entrar a una sala")
+        })
+
         return () => {
             socket.off("rooms-updated")
             socket.off("room-full")
+            socket.off("alias-required")
         }
     }, [])
 
     function handleCreateRoom() {
-        if (!roomId || !alias) return
+        if (!roomId.trim() || !trimmedAlias) return
 
         socket.emit("create-room", {
-            roomId,
-            alias
+            roomId: roomId.trim(),
+            alias: trimmedAlias
         })
 
-        navigate(`/game/${roomId}`)
+        navigate(`/game/${roomId.trim()}`)
     }
 
     function handleJoinRoom(id: string) {
+        if (!trimmedAlias) {
+            alert("Escribe tu alias antes de entrar a una sala")
+            return
+        }
+
         socket.emit("join-room", {
             roomId: id,
-            alias
+            alias: trimmedAlias
         })
 
         navigate(`/game/${id}`)
@@ -74,7 +85,8 @@ export default function Rooms() {
 
             <button
                 onClick={handleCreateRoom}
-                className="bg-violet-500 hover:bg-violet-700 transition-all cursor-pointer text-white font-medium px-4 py-2 rounded"
+                disabled={!trimmedAlias || !roomId.trim()}
+                className="bg-violet-500 hover:bg-violet-700 transition-all cursor-pointer text-white font-medium px-4 py-2 rounded disabled:opacity-50"
             >
                 Crear sala
             </button>
@@ -93,7 +105,8 @@ export default function Rooms() {
                         <button
                             key={room.id}
                             onClick={() => handleJoinRoom(room.id)}
-                            className="border-2 p-3 rounded border-violet-500 text-violet-500 font-medium hover:border-violet-700 hover:text-violet-700 cursor-pointer"
+                        disabled={!trimmedAlias}
+                        className="border-2 p-3 rounded border-violet-500 text-violet-500 font-medium hover:border-violet-700 hover:text-violet-700 cursor-pointer disabled:opacity-50"
                         >
                             {room.id} - {room.players.length >= 2 ? "Llena" : "Esperando"}
                         </button>
